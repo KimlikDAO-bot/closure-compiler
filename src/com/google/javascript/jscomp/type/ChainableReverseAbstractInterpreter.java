@@ -256,7 +256,7 @@ public abstract class ChainableReverseAbstractInterpreter
 
     @Override
     public JSType caseTemplateType(TemplateType templateType) {
-      return caseObjectType(templateType);
+      return templateType.getBound().visit(this);
     }
 
     @Override

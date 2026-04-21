@@ -1015,4 +1015,41 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
             """)
         .run();
   }
+
+  @Test
+  public void testTemplateInferencePreservesAnonymousObjectLiteralIdentity() {
+    newTest()
+        .addSource(
+            """
+            /** @template T */
+            class Matcher {
+              /** @param {!T} actual */
+              constructor(actual) {
+                /** @const {!T} */
+                this.actual = actual;
+              }
+
+              /** @param {!T} expected */
+              toEq(expected) {}
+            }
+
+            /**
+             * @template T
+             * @param {!T} actual
+             * @return {!Matcher<!T>}
+             */
+            function expect(actual) {
+              return new Matcher(actual);
+            }
+
+            expect({name: 'Rex'}).toEq({name: 'Rex'});
+            """)
+        .addDiagnostic(
+            """
+            actual parameter 1 of Matcher.prototype.toEq does not match formal parameter
+            found   : {name: string}
+            required: {name: string}
+            """)
+        .run();
+  }
 }

@@ -6640,6 +6640,21 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertType(secondType).isSubtypeOf(firstType);
   }
 
+  @Test
+  public void testObjectLiteralsWithSamePropertiesAreDistinctTypes() {
+    ObjectType firstType = registry.createAnonymousObjectType(null);
+    firstType.defineDeclaredProperty("x", NUMBER_TYPE, null);
+    assertType(firstType).toStringIsEqualTo("{x: number}");
+
+    ObjectType secondType = registry.createAnonymousObjectType(null);
+    secondType.defineDeclaredProperty("x", NUMBER_TYPE, null);
+    assertType(secondType).toStringIsEqualTo("{x: number}");
+
+    assertType(firstType).isNotEqualTo(secondType);
+    assertType(firstType).isNotSubtypeOf(secondType);
+    assertType(secondType).isNotSubtypeOf(firstType);
+  }
+
   private <T> T withOpenRegistry(Supplier<T> cb) {
     try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
       return cb.get();

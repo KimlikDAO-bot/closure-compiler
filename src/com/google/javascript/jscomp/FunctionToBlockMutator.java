@@ -155,12 +155,24 @@ class FunctionToBlockMutator {
             newFnNode, callNode, this.safeNameIdSupplier);
     boolean hasArgs = !args.isEmpty();
     ImmutableSet<String> allNamesToAlias = ImmutableSet.of();
+    ImmutableSet<String> retaggableAliasNames = ImmutableSet.of();
     if (hasArgs) {
       ImmutableSet<String> temps =
           functionArgumentInjector.gatherCallArgumentsNeedingTemps(
               compiler, newFnNode, args, modifiedParameters, compiler.getCodingConvention());
       allNamesToAlias =
           ImmutableSet.<String>builder().addAll(modifiedParameters).addAll(temps).build();
+      if (!allNamesToAlias.isEmpty()) {
+        // If the original parameter can be reassigned or captured, later references no longer
+        // necessarily mean "the call-site value", so don't retag those aliases.
+        ImmutableSet.Builder<String> retaggableAliasNamesBuilder = ImmutableSet.builder();
+        for (String name : allNamesToAlias) {
+          if (!modifiedParameters.contains(name)) {
+            retaggableAliasNamesBuilder.add(name);
+          }
+        }
+        retaggableAliasNames = retaggableAliasNamesBuilder.build();
+      }
     }
 
     Node newBlock = NodeUtil.getFunctionBody(newFnNode);
@@ -168,7 +180,8 @@ class FunctionToBlockMutator {
     newBlock.detach();
 
     if (hasArgs) {
-      Node inlineResult = aliasAndInlineArguments(newBlock, args, allNamesToAlias);
+      Node inlineResult =
+          aliasAndInlineArguments(newBlock, args, allNamesToAlias, retaggableAliasNames);
       checkState(newBlock == inlineResult);
     }
 
@@ -320,7 +333,8 @@ class FunctionToBlockMutator {
   private Node aliasAndInlineArguments(
       Node fnTemplateRoot,
       ImmutableMap<String, ParamArgPair> paramToArgMap,
-      Set<String> namesToAlias) {
+      Set<String> namesToAlias,
+      Set<String> retaggableAliasNames) {
 
     if (namesToAlias == null || namesToAlias.isEmpty()) {
       // There are no names to alias. Just inline the arguments directly.
@@ -338,6 +352,7 @@ class FunctionToBlockMutator {
       // This is a subset of paramToArg: we exclude parameters for which we create
       // an explicit alias.
       Map<String, Node> paramReplacements = new LinkedHashMap<>();
+      Map<String, Node> aliasedNameToValue = new LinkedHashMap<>();
 
       // Declare the aliases in the same order as the arguments are defined.
       List<Node> newAliasesToAdd = new ArrayList<>();
@@ -361,9 +376,16 @@ class FunctionToBlockMutator {
               && (referencesThis || compiler.getAstAnalyzer().mayHaveSideEffects(originalValue))) {
             String newName = getUniqueThisName();
             Node newValue = originalValue.cloneTree();
-            Node newNode = NodeUtil.newVarNode(newName, newValue).srcrefTreeIfMissing(newValue);
+            Node newNameNode = IR.name(newName).srcref(newValue);
+            if (retaggableAliasNames.contains(THIS_MARKER)) {
+              copyTypeAndColorCast(originalValue, newNameNode);
+            }
+            Node newNode = NodeUtil.newVarNode(newNameNode, newValue).srcrefTreeIfMissing(newValue);
             newAliasesToAdd.add(0, newNode);
             replacement = IR.name(newName).srcrefTree(newValue);
+            if (retaggableAliasNames.contains(THIS_MARKER)) {
+              copyTypeAndColorCast(originalValue, replacement);
+            }
           }
           paramReplacements.put(THIS_MARKER, replacement);
         } else {
@@ -377,6 +399,10 @@ class FunctionToBlockMutator {
           Node newName = arg.paramNode().cloneNode();
           Node newValue = arg.arg().cloneTree();
           newName.srcref(newValue); // source information should point to the argument.
+          if (retaggableAliasNames.contains(name)) {
+            copyTypeAndColorCast(arg.arg(), newName);
+            aliasedNameToValue.put(name, arg.arg());
+          }
           Node newNode = IR.var(newName, newValue).srcrefTreeIfMissing(newValue);
           newAliasesToAdd.add(0, newNode);
         }
@@ -386,6 +412,7 @@ class FunctionToBlockMutator {
       Node result =
           functionArgumentInjector.inject(compiler, fnTemplateRoot, null, paramReplacements);
       checkState(result == fnTemplateRoot);
+      retagAliasedParameterReferences(fnTemplateRoot, aliasedNameToValue);
 
       // Now that the names have been replaced, add the new aliases for
       // the old names.
@@ -394,6 +421,31 @@ class FunctionToBlockMutator {
       }
 
       return result;
+    }
+  }
+
+  private static void retagAliasedParameterReferences(
+      Node root, Map<String, Node> aliasedNameToValue) {
+    if (aliasedNameToValue.isEmpty()) {
+      return;
+    }
+
+    if (NodeUtil.isReferenceName(root)) {
+      Node aliasedValue = aliasedNameToValue.get(root.getString());
+      if (aliasedValue != null) {
+        copyTypeAndColorCast(aliasedValue, root);
+      }
+    }
+
+    for (Node child = root.getFirstChild(); child != null; child = child.getNext()) {
+      retagAliasedParameterReferences(child, aliasedNameToValue);
+    }
+  }
+
+  private static void copyTypeAndColorCast(Node source, Node destination) {
+    destination.copyTypeFrom(source);
+    if (source.getColor() != null && source.isColorFromTypeCast()) {
+      destination.setColorFromTypeCast();
     }
   }
 

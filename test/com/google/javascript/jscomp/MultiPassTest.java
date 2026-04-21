@@ -87,6 +87,56 @@ public final class MultiPassTest extends CompilerTestCase {
   }
 
   @Test
+  public void testInlineFunctionsRetagsAliasedParameterForTypedPeepholes() {
+    replaceTypesWithColors();
+    passes = new ArrayList<>();
+    addInlineFunctions();
+    addTypedPeephole();
+    test(
+        externs(new TestExternsBuilder().addArray().build()),
+        srcs(
+            """
+            /**
+             * @param {!Array<number>|number} x
+             * @return {!Array<number>}
+             */
+            function f(x) {
+              return Array.isArray(x) ? x : [x];
+            }
+            var result = f([1, 2, 3]);
+            """),
+        expected(
+            """
+            var result;
+            var x$jscomp$inline_0 = [1, 2, 3];
+            result = x$jscomp$inline_0;
+            """));
+  }
+
+  @Test
+  public void testInlineFunctionsRetagsAliasedThisForTypedPeepholes() {
+    replaceTypesWithColors();
+    passes = new ArrayList<>();
+    addInlineFunctions();
+    addTypedPeephole();
+    test(
+        externs(new TestExternsBuilder().addArray().addFunction().build()),
+        srcs(
+            """
+            /** @return {string} */
+            function f() {
+              return Array.isArray(this) ? typeof this : 'not-array';
+            }
+            var result = f.call([1, 2, 3]);
+            """),
+        expected(
+            """
+            var result;
+            result = 'object';
+            """));
+  }
+
+  @Test
   public void testInlineVarsAndDeadCodeElim() {
     passes = new ArrayList<>();
     addInlineVariables();
@@ -483,6 +533,27 @@ public final class MultiPassTest extends CompilerTestCase {
                       new PeepholeReplaceKnownMethods(late, /* useTypes= */ false),
                       new PeepholeRemoveDeadCode(),
                       new PeepholeFoldConstants(late, false /* useTypes */),
+                      new PeepholeCollectPropertyAssignments());
+                })
+            .build());
+  }
+
+  private void addTypedPeephole() {
+    passes.add(
+        PassFactory.builder()
+            .setName("peepholeOptimizationsTyped")
+            .setRunInFixedPointLoop(true)
+            .setInternalFactory(
+                (compiler) -> {
+                  final boolean late = false;
+                  return new PeepholeOptimizationsPass(
+                      compiler,
+                      getName(),
+                      new PeepholeMinimizeConditions(late),
+                      new PeepholeSubstituteAlternateSyntax(late),
+                      new PeepholeReplaceKnownMethods(late, /* useTypes= */ true),
+                      new PeepholeRemoveDeadCode(),
+                      new PeepholeFoldConstants(late, /* useTypes= */ true),
                       new PeepholeCollectPropertyAssignments());
                 })
             .build());
