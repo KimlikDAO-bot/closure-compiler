@@ -116,8 +116,14 @@ public interface Visitor<T> {
 
   /**
    * Symbol value type's case.
+   *
+   * <p>This method originally did not take a parameter. It was changed to take a specific
+   * type to support {@link KnownSymbolType}.
+   *
+   * <p>TODO: lharker - audit implementations of this method to see if any need updating to
+   * account for known symbol types.
    */
-  T caseSymbolType();
+  T caseSymbolType(SymbolType type);
 
   /**
    * Void type's case.
@@ -222,8 +228,8 @@ public interface Visitor<T> {
     }
 
     @Override
-    public T caseSymbolType() {
-      return this.caseDefault(null);
+    public T caseSymbolType(SymbolType type) {
+      return caseDefault(type);
     }
 
     @Override

@@ -16888,7 +16888,7 @@ google.maps.maps3d.Map3DElement.prototype.bounds;
  * favored. The fields <code>cameraPosition</code> and <code>center</code> can
  * be one-to-one-derived from each other in context of the given shared heading,
  * range, roll, and tilt.
- * @type {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ * @type {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral|null|undefined}
  */
 google.maps.maps3d.Map3DElement.prototype.cameraPosition;
 
@@ -16899,7 +16899,7 @@ google.maps.maps3d.Map3DElement.prototype.cameraPosition;
  * from the map center. If not set, defaults to <code>{lat: 0, lng: 0, altitude:
  * 63170000}</code>. 63170000 meters is a maximum allowed altitude (Earth radius
  * multiplied by 10).
- * @type {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ * @type {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral|null|undefined}
  */
 google.maps.maps3d.Map3DElement.prototype.center;
 
@@ -17135,13 +17135,13 @@ google.maps.maps3d.Map3DElementOptions.prototype.bounds;
 
 /**
  * See {@link google.maps.maps3d.Map3DElement.cameraPosition}.
- * @type {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ * @type {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral|null|undefined}
  */
 google.maps.maps3d.Map3DElementOptions.prototype.cameraPosition;
 
 /**
  * See {@link google.maps.maps3d.Map3DElement.center}.
- * @type {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|null|undefined}
+ * @type {!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral|null|undefined}
  */
 google.maps.maps3d.Map3DElementOptions.prototype.center;
 
@@ -17395,6 +17395,13 @@ google.maps.maps3d.Marker3DElementOptions = function() {};
  * @type {!google.maps.maps3d.AltitudeMode|null|undefined}
  */
 google.maps.maps3d.Marker3DElementOptions.prototype.altitudeMode;
+
+/**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * See {@link google.maps.maps3d.Marker3DElement.autofitsCamera}.
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Marker3DElementOptions.prototype.autofitsCamera;
 
 /**
  * See {@link google.maps.maps3d.Marker3DElement.collisionBehavior}.
@@ -17964,10 +17971,22 @@ google.maps.maps3d.Polygon3DElementOptions.prototype.geodesic;
 google.maps.maps3d.Polygon3DElementOptions.prototype.innerCoordinates;
 
 /**
+ * See {@link google.maps.maps3d.Polygon3DElement.innerPaths}.
+ * @type {!Iterable<!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral>|!Iterable<!google.maps.LatLngLiteral>>|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElementOptions.prototype.innerPaths;
+
+/**
  * See {@link google.maps.maps3d.Polygon3DElement.outerCoordinates}.
  * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
  */
 google.maps.maps3d.Polygon3DElementOptions.prototype.outerCoordinates;
+
+/**
+ * See {@link google.maps.maps3d.Polygon3DElement.path}.
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ */
+google.maps.maps3d.Polygon3DElementOptions.prototype.path;
 
 /**
  * See {@link google.maps.maps3d.Polygon3DElement.strokeColor}.
@@ -18128,6 +18147,13 @@ google.maps.maps3d.Polyline3DElementOptions = function() {};
 google.maps.maps3d.Polyline3DElementOptions.prototype.altitudeMode;
 
 /**
+ * Available only in the v=alpha channel: https://goo.gle/js-alpha-channel.
+ * See {@link google.maps.maps3d.Polyline3DElement.autofitsCamera}.
+ * @type {boolean|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElementOptions.prototype.autofitsCamera;
+
+/**
  * See {@link google.maps.maps3d.Polyline3DElement.coordinates}.
  * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
  */
@@ -18162,6 +18188,12 @@ google.maps.maps3d.Polyline3DElementOptions.prototype.outerColor;
  * @type {number|null|undefined}
  */
 google.maps.maps3d.Polyline3DElementOptions.prototype.outerWidth;
+
+/**
+ * See {@link google.maps.maps3d.Polyline3DElement.path}.
+ * @type {!Iterable<!google.maps.LatLngAltitude|!google.maps.LatLngAltitudeLiteral|!google.maps.LatLngLiteral>|null|undefined}
+ */
+google.maps.maps3d.Polyline3DElementOptions.prototype.path;
 
 /**
  * See {@link google.maps.maps3d.Polyline3DElement.strokeColor}.
@@ -18581,31 +18613,36 @@ google.maps.marker.AdvancedMarkerElementOptions.prototype.zIndex;
 google.maps.marker.PinElement = function(options) {};
 
 /**
- * See {@link google.maps.marker.PinElementOptions.background}.
+ * The background color of the pin shape. See {@link
+ * google.maps.marker.PinElementOptions.background}.
  * @type {string|null|undefined}
  */
 google.maps.marker.PinElement.prototype.background;
 
 /**
- * See {@link google.maps.marker.PinElementOptions.borderColor}.
+ * The border color of the pin shape. See {@link
+ * google.maps.marker.PinElementOptions.borderColor}.
  * @type {string|null|undefined}
  */
 google.maps.marker.PinElement.prototype.borderColor;
 
 /**
- * See {@link google.maps.marker.PinElementOptions.glyphColor}.
+ * The color of the pin glyph. See {@link
+ * google.maps.marker.PinElementOptions.glyphColor}.
  * @type {string|null|undefined}
  */
 google.maps.marker.PinElement.prototype.glyphColor;
 
 /**
- * See {@link google.maps.marker.PinElementOptions.glyphSrc}.
+ * The source of the glyph image to be displayed in the pin. See {@link
+ * google.maps.marker.PinElementOptions.glyphSrc}.
  * @type {!URL|string|null|undefined}
  */
 google.maps.marker.PinElement.prototype.glyphSrc;
 
 /**
- * See {@link google.maps.marker.PinElementOptions.glyphText}.
+ * The text displayed in the pin. See {@link
+ * google.maps.marker.PinElementOptions.glyphText}.
  * @type {string|null|undefined}
  */
 google.maps.marker.PinElement.prototype.glyphText;
@@ -21425,7 +21462,7 @@ google.maps.places.PlaceAutocompleteElement.prototype.origin;
 
 /**
  * The placeholder text to display in the input element.
- * @type {string}
+ * @type {string|null}
  */
 google.maps.places.PlaceAutocompleteElement.prototype.placeholder;
 
@@ -21462,7 +21499,7 @@ google.maps.places.PlaceAutocompleteElement.prototype.unitSystem;
 
 /**
  * The value of the input element.
- * @type {string}
+ * @type {string|null}
  */
 google.maps.places.PlaceAutocompleteElement.prototype.value;
 
@@ -21740,7 +21777,7 @@ google.maps.places.PlaceDetailsCompactElement.prototype.place;
  * If true, truncates the place name and address to fit on one line instead of
  * wrapping.
  * @default <code>false</code>
- * @type {boolean}
+ * @type {boolean|null|undefined}
  */
 google.maps.places.PlaceDetailsCompactElement.prototype.truncationPreferred;
 
@@ -21897,7 +21934,7 @@ google.maps.places.PlaceDetailsPlaceRequestElement = function(options) {};
  * Details Compact element. This property reflects to the attribute as a
  * resource name.
  * @default <code>null</code>
- * @type {!google.maps.places.Place|null}
+ * @type {!google.maps.places.Place|string|null|undefined}
  */
 google.maps.places.PlaceDetailsPlaceRequestElement.prototype.place;
 
@@ -23425,8 +23462,7 @@ google.maps.places.PlaceTextSearchRequestElement.prototype.includedType;
 google.maps.places.PlaceTextSearchRequestElement.prototype.isOpenNow;
 
 /**
- * Location bias for the search. Normalizes to a <code>LatLngAltitude |
- * LatLngBounds | Circle | string</code>.
+ * Location bias for the search.
  * @default <code>null</code>
  * @type {!google.maps.places.LocationBias|null|undefined}
  */

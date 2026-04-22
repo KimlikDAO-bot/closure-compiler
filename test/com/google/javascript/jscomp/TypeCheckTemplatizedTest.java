@@ -1052,4 +1052,30 @@ public final class TypeCheckTemplatizedTest extends TypeCheckTestCase {
             """)
         .run();
   }
+
+  @Test
+  public void testWellKnownSymbol_instantiatedInTemplateType() {
+    newTest()
+        .addSource(
+            """
+            /** @template T */
+            class Foo {
+              /** @return {!Array<T>} */
+              x() {
+                return [];
+              }
+            }
+            /** @type {!Foo<typeof Symbol.iterator>} */
+            const a = new Foo();
+            /** @type {null} expected to error */
+            const b = a.x();
+            """)
+        .addDiagnostic(
+            """
+            initializing variable
+            found   : Array<Symbol.iterator>
+            required: null
+            """)
+        .run();
+  }
 }

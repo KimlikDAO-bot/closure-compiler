@@ -115,6 +115,6 @@ public class SymbolType extends ValueType {
 
   @Override
   public <T> T visit(Visitor<T> visitor) {
-    return visitor.caseSymbolType();
+    return visitor.caseSymbolType(this);
   }
 }

@@ -328,8 +328,8 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
   }
 
   @Override
-  public JSType caseSymbolType() {
-    return getNativeType(JSTypeNative.SYMBOL_TYPE);
+  public JSType caseSymbolType(SymbolType type) {
+    return type;
   }
 
   @Override

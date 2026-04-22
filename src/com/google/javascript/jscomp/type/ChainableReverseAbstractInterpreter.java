@@ -46,6 +46,7 @@ import com.google.javascript.rhino.jstype.NoType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.ProxyObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
+import com.google.javascript.rhino.jstype.SymbolType;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.UnionType;
@@ -318,7 +319,7 @@ public abstract class ChainableReverseAbstractInterpreter
     }
 
     @Override
-    public JSType caseSymbolType() {
+    public JSType caseSymbolType(SymbolType type) {
       return null;
     }
 
@@ -381,8 +382,8 @@ public abstract class ChainableReverseAbstractInterpreter
     }
 
     @Override
-    public JSType caseSymbolType() {
-      return getNativeType(SYMBOL_TYPE);
+    public JSType caseSymbolType(SymbolType type) {
+      return type;
     }
 
     @Override
@@ -487,8 +488,8 @@ public abstract class ChainableReverseAbstractInterpreter
     }
 
     @Override
-    public @Nullable JSType caseSymbolType() {
-      return matchesExpectation("symbol") ? getNativeType(SYMBOL_TYPE) : null;
+    public @Nullable JSType caseSymbolType(SymbolType type) {
+      return matchesExpectation("symbol") ? type : null;
     }
 
     @Override
