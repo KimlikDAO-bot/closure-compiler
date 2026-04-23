@@ -337,7 +337,8 @@ public final class JSChunkGraphTest {
     makeGraph();
     setUpManageDependenciesTest();
     DependencyOptions depOptions = DependencyOptions.pruneLegacyForEntryPoints(ImmutableList.of());
-    ImmutableList<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
+    ImmutableList<CompilerInput> results =
+        graph.manageDependencies(compiler, depOptions).orderedInputs();
 
     assertInputs(chunkA, "a1", "a3");
     assertInputs(chunkB, "a2", "b2");
@@ -356,7 +357,8 @@ public final class JSChunkGraphTest {
     DependencyOptions depOptions =
         DependencyOptions.pruneLegacyForEntryPoints(
             ImmutableList.of(ModuleIdentifier.forClosure("c2")));
-    ImmutableList<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
+    ImmutableList<CompilerInput> results =
+        graph.manageDependencies(compiler, depOptions).orderedInputs();
 
     assertInputs(chunkA, "a1", "a3");
     assertInputs(chunkB, "a2", "b2");
@@ -374,7 +376,8 @@ public final class JSChunkGraphTest {
     setUpManageDependenciesTest();
     DependencyOptions depOptions =
         DependencyOptions.pruneForEntryPoints(ImmutableList.of(ModuleIdentifier.forClosure("c2")));
-    ImmutableList<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
+    ImmutableList<CompilerInput> results =
+        graph.manageDependencies(compiler, depOptions).orderedInputs();
 
     // Everything gets pushed up into chunk c, because that's
     // the only one that has entry points.
@@ -401,7 +404,8 @@ public final class JSChunkGraphTest {
     }
     DependencyOptions depOptions =
         DependencyOptions.pruneForEntryPoints(ImmutableList.of(ModuleIdentifier.forClosure("a1")));
-    ImmutableList<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
+    ImmutableList<CompilerInput> results =
+        graph.manageDependencies(compiler, depOptions).orderedInputs();
 
     assertInputs(chunkA, "a1", "a2");
     assertThat(sourceNames(results)).containsExactly("a1", "a2");
@@ -424,7 +428,8 @@ public final class JSChunkGraphTest {
 
     DependencyOptions depOptions =
         DependencyOptions.pruneForEntryPoints(ImmutableList.of(ModuleIdentifier.forClosure("a1")));
-    ImmutableList<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
+    ImmutableList<CompilerInput> results =
+        graph.manageDependencies(compiler, depOptions).orderedInputs();
 
     // Everything gets pushed up into chunk c, because that's
     // the only one that has entry points.
@@ -439,7 +444,7 @@ public final class JSChunkGraphTest {
     makeGraph();
     setUpManageDependenciesTest();
     ImmutableList<CompilerInput> results =
-        graph.manageDependencies(compiler, DependencyOptions.sortOnly());
+        graph.manageDependencies(compiler, DependencyOptions.sortOnly()).orderedInputs();
 
     assertInputs(chunkA, "a1", "a2", "a3");
     assertInputs(chunkB, "b1", "b2");
@@ -472,7 +477,7 @@ public final class JSChunkGraphTest {
     }
 
     ImmutableList<CompilerInput> results =
-        graph.manageDependencies(compiler, DependencyOptions.sortOnly());
+        graph.manageDependencies(compiler, DependencyOptions.sortOnly()).orderedInputs();
 
     assertInputs(chunkA, "base.js", "a1", "a2");
 
@@ -484,7 +489,7 @@ public final class JSChunkGraphTest {
     makeDeps();
     makeGraph();
     ImmutableList<CompilerInput> results =
-        graph.manageDependencies(compiler, DependencyOptions.sortOnly());
+        graph.manageDependencies(compiler, DependencyOptions.sortOnly()).orderedInputs();
     assertThat(results).isEmpty();
   }
 
@@ -565,7 +570,8 @@ public final class JSChunkGraphTest {
         input.setCompiler(compiler);
       }
 
-      ImmutableList<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
+      ImmutableList<CompilerInput> results =
+          graph.manageDependencies(compiler, depOptions).orderedInputs();
 
       assertInputs(chunkA, "base.js", "a2", "a3", "a4", "a5", "a6", "a7", "a8", "a9", "a1");
 
@@ -623,7 +629,8 @@ public final class JSChunkGraphTest {
         input.setHasFullParseDependencyInfo(true);
       }
 
-      ImmutableList<CompilerInput> results = graph.manageDependencies(compiler, depOptions);
+      ImmutableList<CompilerInput> results =
+          graph.manageDependencies(compiler, depOptions).orderedInputs();
 
       assertInputs(
           chunkA,

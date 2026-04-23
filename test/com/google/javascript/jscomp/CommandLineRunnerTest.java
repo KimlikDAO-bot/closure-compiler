@@ -3989,13 +3989,10 @@ Expected --production_instrumentation_array_name to be set when --instrument_for
     compile(new String[] {input});
 
     Compiler compiler = lastCompiler;
-    ImmutableList<JSError> actualDiagnostics =
-        ImmutableList.<JSError>builder()
-            .addAll(compiler.getErrors())
-            .addAll(compiler.getWarnings())
-            .build();
-
-    return actualDiagnostics;
+    return ImmutableList.<JSError>builder()
+        .addAll(compiler.getErrors())
+        .addAll(compiler.getWarnings())
+        .build();
   }
 
   private Node parse(String[] original) {

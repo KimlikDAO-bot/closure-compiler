@@ -122,6 +122,121 @@ public final class RewriteClassMembersTest extends CompilerTestCase {
         """);
   }
 
+  private void assertTranspilationOfPrivateClassPropertiesNotYetImplemented(String src) {
+    setLanguageOut(LanguageMode.ECMASCRIPT_2022);
+    // TODO(b/236744850): currently, Feature.PRIVATE_CLASS_PROPERTIES is set to ES_UNSUPPORTED. We
+    // need to update this test once we support private class properties.
+    AssertionError error1 = assertThrows(AssertionError.class, () -> test(src, src));
+    assertThat(error1)
+        .hasMessageThat()
+        .contains("Transpilation of 'Private class properties' is not yet implemented.");
+
+    setLanguageOut(LanguageMode.ECMASCRIPT_2021);
+    AssertionError error2 = assertThrows(AssertionError.class, () -> test(src, src));
+    assertThat(error2)
+        .hasMessageThat()
+        .contains("Transpilation of 'Private class properties' is not yet implemented.");
+
+    setLanguageOut(LanguageMode.UNSUPPORTED);
+    AssertionError error3 = assertThrows(AssertionError.class, () -> test(src, src));
+    assertThat(error3)
+        .hasMessageThat()
+        .contains("Transpilation of 'Private class properties' is not yet implemented.");
+  }
+
+  @Test
+  public void testPrivateField() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          #field;
+          #field_initialized = 1;
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateStaticField() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          static #static_field;
+          static #static_field_initialized = 2;
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateMethod() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          #method() {}
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateStaticMethod() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          static #staticMethod() {}
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateGetter() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          get #prop() { return 3; }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateStaticGetter() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          static get #prop() { return 4; }
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateSetter() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          set #prop(val) {}
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateStaticSetter() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          static set #prop(val) {}
+        }
+        """);
+  }
+
+  @Test
+  public void testPrivateIdInOperator() {
+    assertTranspilationOfPrivateClassPropertiesNotYetImplemented(
+        """
+        class Foo {
+          #field;
+          brandCheck(x) { return #field in x; }
+        }
+        """);
+  }
+
   @Test
   public void testClassStaticBlock_superRef_onClassWithNameSpace() {
     test(

@@ -105,12 +105,18 @@ public final class FeatureCollector {
         if (parentContext.equals(FeatureContext.CLASS_MEMBERS)) {
           addScriptFeature(Feature.CLASS_GETTER_SETTER);
         }
+        if (node.isPrivateIdentifier()) {
+          addScriptFeature(Feature.PRIVATE_CLASS_PROPERTIES);
+        }
       }
       case REGEXP -> addScriptFeature(Feature.REGEXP_SYNTAX);
       case SETTER_DEF -> {
         addScriptFeature(Feature.SETTER);
         if (parentContext.equals(FeatureContext.CLASS_MEMBERS)) {
           addScriptFeature(Feature.CLASS_GETTER_SETTER);
+        }
+        if (node.isPrivateIdentifier()) {
+          addScriptFeature(Feature.PRIVATE_CLASS_PROPERTIES);
         }
       }
       case BLOCK -> {
@@ -169,8 +175,25 @@ public final class FeatureCollector {
       case CONST -> addScriptFeature(Feature.CONST_DECLARATIONS);
       case LET -> addScriptFeature(Feature.LET_DECLARATIONS);
       case CLASS -> addScriptFeature(Feature.CLASSES);
-      case MEMBER_FUNCTION_DEF -> addScriptFeature(Feature.MEMBER_DECLARATIONS);
-      case MEMBER_FIELD_DEF, COMPUTED_FIELD_DEF -> addScriptFeature(Feature.PUBLIC_CLASS_FIELDS);
+      case MEMBER_FUNCTION_DEF -> {
+        addScriptFeature(Feature.MEMBER_DECLARATIONS);
+        if (node.isPrivateIdentifier()) {
+          addScriptFeature(Feature.PRIVATE_CLASS_PROPERTIES);
+        }
+      }
+      case MEMBER_FIELD_DEF -> {
+        if (node.isPrivateIdentifier()) {
+          addScriptFeature(Feature.PRIVATE_CLASS_PROPERTIES);
+        } else {
+          addScriptFeature(Feature.PUBLIC_CLASS_FIELDS);
+        }
+      }
+      case IN -> {
+        if (node.getFirstChild() != null && node.getFirstChild().isPrivateIdentifier()) {
+          addScriptFeature(Feature.PRIVATE_CLASS_PROPERTIES);
+        }
+      }
+      case COMPUTED_FIELD_DEF -> addScriptFeature(Feature.PUBLIC_CLASS_FIELDS);
       case SUPER -> addScriptFeature(Feature.SUPER);
       case ARRAY_PATTERN -> addScriptFeature(Feature.ARRAY_DESTRUCTURING);
       case OBJECT_PATTERN -> addScriptFeature(Feature.OBJECT_DESTRUCTURING);

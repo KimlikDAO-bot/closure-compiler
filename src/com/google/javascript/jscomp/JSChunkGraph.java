@@ -25,6 +25,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -284,8 +285,7 @@ public final class JSChunkGraph implements Serializable {
    *
    * @return The chunk, or null if no such chunk exists.
    */
-  @Nullable
-  JSChunk getChunkByName(String name) {
+  @Nullable JSChunk getChunkByName(String name) {
     for (JSChunk m : chunks) {
       if (m.getName().equals(name)) {
         return m;
@@ -325,21 +325,21 @@ public final class JSChunkGraph implements Serializable {
     for (JSChunk chunk : getAllChunks()) {
       JsonObject node = new JsonObject();
       node.add("name", new JsonPrimitive(chunk.getName()));
-        JsonArray deps = new JsonArray();
-        node.add("dependencies", deps);
+      JsonArray deps = new JsonArray();
+      node.add("dependencies", deps);
       for (JSChunk m : chunk.getDependencies()) {
-          deps.add(new JsonPrimitive(m.getName()));
-        }
-        JsonArray transitiveDeps = new JsonArray();
-        node.add("transitive-dependencies", transitiveDeps);
+        deps.add(new JsonPrimitive(m.getName()));
+      }
+      JsonArray transitiveDeps = new JsonArray();
+      node.add("transitive-dependencies", transitiveDeps);
       for (JSChunk m : getTransitiveDepsDeepestFirst(chunk)) {
-          transitiveDeps.add(new JsonPrimitive(m.getName()));
-        }
-        JsonArray inputs = new JsonArray();
-        node.add("inputs", inputs);
+        transitiveDeps.add(new JsonPrimitive(m.getName()));
+      }
+      JsonArray inputs = new JsonArray();
+      node.add("inputs", inputs);
       for (CompilerInput input : chunk.getInputs()) {
         inputs.add(new JsonPrimitive(input.getSourceFile().getName()));
-        }
+      }
       chunks.add(node);
     }
     return chunks;
@@ -414,8 +414,7 @@ public final class JSChunkGraph implements Serializable {
    * @return The deepest common dep of {@code m1} and {@code m2}, or null if they have no common
    *     dependencies
    */
-  @Nullable
-  JSChunk getDeepestCommonDependency(JSChunk m1, JSChunk m2) {
+  @Nullable JSChunk getDeepestCommonDependency(JSChunk m1, JSChunk m2) {
     int m1Depth = m1.getDepth();
     int m2Depth = m2.getDepth();
     // According our definition of depth, the result must have a strictly
@@ -508,7 +507,7 @@ public final class JSChunkGraph implements Serializable {
    *
    * @throws MissingProvideException if an entry point was not provided by any of the inputs.
    */
-  public ImmutableList<CompilerInput> manageDependencies(
+  public DependencyManagementResult manageDependencies(
       AbstractCompiler compiler, DependencyOptions dependencyOptions)
       throws MissingProvideException, MissingChunkException {
 
@@ -650,14 +649,15 @@ public final class JSChunkGraph implements Serializable {
       }
     }
 
-    // Now, generate the sorted result.
-    ImmutableList.Builder<CompilerInput> result = ImmutableList.builder();
-    for (JSChunk chunk : getAllChunks()) {
-      result.addAll(chunk.getInputs());
-    }
-
-    return result.build();
+    return new DependencyManagementResult(
+        ImmutableList.copyOf(orderedInputs), sorter, ImmutableSet.copyOf(entryPointInputs));
   }
+
+  /** Result of {@link JSChunkGraph#manageDependencies}. */
+  public record DependencyManagementResult(
+      ImmutableList<CompilerInput> orderedInputs,
+      SortedDependencies<CompilerInput> sorter,
+      ImmutableSet<CompilerInput> entryPointInputs) {}
 
   /**
    * Given an input and set of unprocessed inputs, return the input and it's strong dependencies by
@@ -818,5 +818,4 @@ public final class JSChunkGraph implements Serializable {
       super(chunkName);
     }
   }
-
 }

@@ -343,6 +343,12 @@ public final class PerformanceTracker {
     this.astManifest = builder.build();
   }
 
+  private String pruningAnalysisSummary = "not executed";
+
+  public void setPruningAnalysisSummary(String summary) {
+    this.pruningAnalysisSummary = summary;
+  }
+
   private String disambiguatePropertiesSummary = "not executed";
 
   public void setDisambiguatePropertiesSummary(String summary) {
@@ -393,7 +399,8 @@ public final class PerformanceTracker {
             "JS lines:   " + this.jsLines,
             "JS sources: " + this.jsSources,
             "Extern lines:   " + this.externLines,
-            "Extern sources: " + this.externSources));
+            "Extern sources: " + this.externSources,
+            "Dependency pruning analysis: " + this.pruningAnalysisSummary));
 
     output.println(
         lines(

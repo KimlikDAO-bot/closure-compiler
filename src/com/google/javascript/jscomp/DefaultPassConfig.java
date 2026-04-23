@@ -667,8 +667,10 @@ public final class DefaultPassConfig extends PassConfig {
     // Passes after this point can no longer depend on normalized AST assumptions.
     passes.maybeAdd(markUnnormalized);
 
+    if (options.shouldCollapseVariableDeclarations() || options.shouldOptimizeLetAndConst()) {
+      passes.maybeAdd(postNormalizePeephole);
+    }
     if (options.shouldCollapseVariableDeclarations()) {
-      passes.maybeAdd(exploitAssign);
       passes.maybeAdd(collapseVariableDeclarations);
     }
 
@@ -2462,6 +2464,8 @@ public final class DefaultPassConfig extends PassConfig {
           .setInternalFactory(FlowSensitiveInlineVariables::new)
           .build();
 
+  /** Lowers block-scoped declarations to function-scoped declarations. */
+
   /** Uses register-allocation algorithms to use fewer variables. */
   private final PassFactory coalesceVariableNames =
       PassFactory.builder()
@@ -2472,13 +2476,22 @@ public final class DefaultPassConfig extends PassConfig {
           .build();
 
   /** Collapses assignment expressions (e.g., {@code x = 3; y = x;} becomes {@code y = x = 3;}. */
-  private final PassFactory exploitAssign =
+  private final PassFactory postNormalizePeephole =
       PassFactory.builder()
-          .setName(PassNames.EXPLOIT_ASSIGN)
+          .setName(PassNames.POST_NORMALIZE_PEEPHOLE)
           .setInternalFactory(
-              (compiler) ->
-                  new PeepholeOptimizationsPass(
-                      compiler, PassNames.EXPLOIT_ASSIGN, new ExploitAssigns()))
+              (compiler) -> {
+                var optimizations = ImmutableList.<AbstractPeepholeOptimization>builder();
+                if (options.shouldCollapseVariableDeclarations()) {
+                  optimizations.add(new ExploitAssigns());
+                }
+                if (options.shouldOptimizeLetAndConst()) {
+                  optimizations.add(
+                      new OptimizeLetAndConstPeephole(options.shouldTreatGlobalScopeAsIsolated()));
+                }
+                return new PeepholeOptimizationsPass(
+                    compiler, PassNames.POST_NORMALIZE_PEEPHOLE, optimizations.build());
+              })
           .build();
 
   /** Collapses variable declarations (e.g., {@code var x; var y;} becomes {@code var x,y;}. */

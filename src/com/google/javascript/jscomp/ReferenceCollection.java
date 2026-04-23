@@ -147,8 +147,7 @@ public final class ReferenceCollection implements Iterable<Reference>, Serializa
   }
 
   /** Constants are allowed to be defined after their first use. */
-  @Nullable
-  Reference getInitializingReferenceForConstants() {
+  @Nullable Reference getInitializingReferenceForConstants() {
     int size = references.size();
     for (int i = 0; i < size; i++) {
       if (isInitializingDeclarationAt(i) || isInitializingAssignmentAt(i)) {
@@ -158,7 +157,9 @@ public final class ReferenceCollection implements Iterable<Reference>, Serializa
     return null;
   }
 
-  /** @return Whether the variable is only assigned a value once for its lifetime. */
+  /**
+   * @return Whether the variable is only assigned a value once for its lifetime.
+   */
   boolean isAssignedOnceInLifetime() {
     Reference ref = getOneAndOnlyAssignment();
     if (ref == null) {
@@ -173,7 +174,13 @@ public final class ReferenceCollection implements Iterable<Reference>, Serializa
           return false;
         }
         break;
-      } else if (block.isLoop()) {
+      }
+
+      if (block.getRoot() == ref.getSymbol().getScope().getRootNode()) {
+        break;
+      }
+
+      if (block.isLoop()) {
         return false;
       }
     }
@@ -195,8 +202,7 @@ public final class ReferenceCollection implements Iterable<Reference>, Serializa
    * @return The one and only assignment. Returns null if the number of assignments is not exactly
    *     one.
    */
-  @Nullable
-  Reference getOneAndOnlyAssignment() {
+  @Nullable Reference getOneAndOnlyAssignment() {
     Reference assignment = null;
     int size = references.size();
     for (int i = 0; i < size; i++) {
@@ -212,7 +218,9 @@ public final class ReferenceCollection implements Iterable<Reference>, Serializa
     return assignment;
   }
 
-  /** @return Whether the variable is never assigned a value. */
+  /**
+   * @return Whether the variable is never assigned a value.
+   */
   boolean isNeverAssigned() {
     int size = references.size();
     for (int i = 0; i < size; i++) {

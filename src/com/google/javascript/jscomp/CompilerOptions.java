@@ -479,6 +479,12 @@ public class CompilerOptions {
   /** Merge two variables together as one. */
   private boolean coalesceVariableNames;
 
+  /** Lower block-scoped declarations to function-scoped declarations. */
+  private boolean optimizeLetAndConst;
+
+  /** Assume the global scope is lexically isolated (e.g. via IIFE or Module). */
+  private boolean assumeGlobalScopeIsIsolated;
+
   /** Move methods to a deeper chunk */
   private boolean crossChunkMethodMotion;
 
@@ -1453,6 +1459,8 @@ public class CompilerOptions {
     // Optimizations
     foldConstants = false;
     coalesceVariableNames = false;
+    optimizeLetAndConst = false;
+    assumeGlobalScopeIsIsolated = false;
     deadAssignmentElimination = false;
     deadPropertyAssignmentElimination = Tri.UNKNOWN;
     inlineConstantVars = false;
@@ -2380,6 +2388,22 @@ public class CompilerOptions {
 
   public boolean shouldCoalesceVariableNames() {
     return coalesceVariableNames;
+  }
+
+  public void setOptimizeLetAndConst(boolean optimizeLetAndConst) {
+    this.optimizeLetAndConst = optimizeLetAndConst;
+  }
+
+  public boolean shouldOptimizeLetAndConst() {
+    return optimizeLetAndConst;
+  }
+
+  public void setAssumeGlobalScopeIsIsolated(boolean assumeGlobalScopeIsIsolated) {
+    this.assumeGlobalScopeIsIsolated = assumeGlobalScopeIsIsolated;
+  }
+
+  public boolean shouldTreatGlobalScopeAsIsolated() {
+    return this.assumeGlobalScopeIsIsolated || this.renamePrefixNamespace != null;
   }
 
   public void setInlineLocalVariables(boolean inlineLocalVariables) {
@@ -3704,12 +3728,17 @@ public class CompilerOptions {
   public static enum TracerMode {
     ALL, // Collect all timing and size metrics. Very slow.
     RAW_SIZE, // Collect all timing and size metrics, except gzipped size. Slow.
+    AST_SIZE_AND_PRUNING, // Collect AST size data and metrics on the impact of dependency pruning.
     AST_SIZE, // For size data, don't serialize the AST, just count the number of nodes.
     TIMING_ONLY, // Collect timing metrics only.
     OFF; // Collect no timing and size metrics.
 
     public boolean isOn() {
       return this != OFF;
+    }
+
+    public boolean doPruningAnalysis() {
+      return this == AST_SIZE_AND_PRUNING || this == ALL || this == RAW_SIZE;
     }
   }
 

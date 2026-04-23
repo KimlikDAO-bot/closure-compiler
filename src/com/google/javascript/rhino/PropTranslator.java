@@ -120,6 +120,7 @@ final class PropTranslator {
       case CONSTANT_VAR_FLAGS -> NodeProperty.CONSTANT_VAR_FLAGS;
       case SYNTHESIZED_UNFULFILLED_NAME_DECLARATION ->
           NodeProperty.SYNTHESIZED_UNFULFILLED_NAME_DECLARATION;
+      case PRIVATE_IDENTIFIER -> NodeProperty.PRIVATE_IDENTIFIER;
       case CLOSURE_UNAWARE_SHADOW,
           // This property is intentionally not included in the serialized TypedAST because it can
           // be re-synthesized when we deserialize nodes later, as it is inferrable from the AST
@@ -144,8 +145,7 @@ final class PropTranslator {
           CONSTRUCT_SIGNATURE,
           ACCESS_MODIFIER,
           IS_TYPESCRIPT_ABSTRACT,
-          TYPEDEF_TYPE,
-          PRIVATE_IDENTIFIER ->
+          TYPEDEF_TYPE ->
           // These cases cannot be translated to a NodeProperty
           null;
     };

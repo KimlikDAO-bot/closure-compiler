@@ -291,6 +291,108 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   @Test
+  public void testFeatureValidation_privateClassField() {
+    testFeatureValidation(
+        """
+        class C {
+          #x=2;
+        }
+        """,
+        Feature.PRIVATE_CLASS_PROPERTIES);
+  }
+
+  @Test
+  public void testFeatureValidation_staticPrivateClassField() {
+    testFeatureValidation(
+        """
+        class C {
+          static #x=2;
+        }
+        """,
+        Feature.PRIVATE_CLASS_PROPERTIES);
+  }
+
+  @Test
+  public void testFeatureValidation_privateGetter() {
+    testFeatureValidation(
+        """
+        class C {
+          get #x() { return 1; }
+        }
+        """,
+        Feature.PRIVATE_CLASS_PROPERTIES);
+  }
+
+  @Test
+  public void testFeatureValidation_privateSetter() {
+    testFeatureValidation(
+        """
+        class C {
+          set #x(val) {}
+        }
+        """,
+        Feature.PRIVATE_CLASS_PROPERTIES);
+  }
+
+  @Test
+  public void testFeatureValidation_privateMethod() {
+    testFeatureValidation(
+        """
+        class C {
+          #m() {}
+        }
+        """,
+        Feature.PRIVATE_CLASS_PROPERTIES);
+  }
+
+  @Test
+  public void testFeatureValidation_privateBrandCheck() {
+    testFeatureValidation(
+        """
+        class C {
+          #x;
+          check(obj) {
+            return #x in obj;
+          }
+        }
+        """,
+        Feature.PRIVATE_CLASS_PROPERTIES);
+  }
+
+  @Test
+  public void testFeatureValidation_staticPrivateMethod() {
+    testFeatureValidation(
+        """
+        class C {
+          static #m() {}
+        }
+        """,
+        Feature.PRIVATE_CLASS_PROPERTIES);
+  }
+
+  @Test
+  public void testFeatureValidation_staticPrivateGetter() {
+    testFeatureValidation(
+        """
+        class C {
+          static get #x() { return 1; }
+        }
+        """,
+        Feature.PRIVATE_CLASS_PROPERTIES);
+  }
+
+  @Test
+  public void testFeatureValidation_staticPrivateSetter() {
+    testFeatureValidation(
+        """
+        class C {
+          static set #x(val) {}
+        }
+        """,
+        Feature.PRIVATE_CLASS_PROPERTIES);
+  }
+
+  @Test
   public void testFeatureValidation_classComputedField() {
     testFeatureValidation(
         """

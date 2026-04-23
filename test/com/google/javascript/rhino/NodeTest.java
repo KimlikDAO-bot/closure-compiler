@@ -816,6 +816,29 @@ public class NodeTest {
   }
 
   @Test
+  public void testSerializeProperties_privateIdentifier() {
+    Node node = Node.newString(Token.NAME, "#field");
+    node.setPrivateIdentifier();
+    long result = node.serializeProperties();
+    assertThat(result)
+        .isEqualTo(bitsetFromNodeProperties(ImmutableSet.of(NodeProperty.PRIVATE_IDENTIFIER)));
+  }
+
+  @Test
+  public void testSerializeProperties_privateIdentifierRoundTrip() {
+    Node original = Node.newString(Token.NAME, "#field");
+    original.setSourceFileForTesting("sourcefile");
+    Node restored = original.cloneNode(); // clone BEFORE setPrivateIdentifier
+
+    assertThat(restored.isPrivateIdentifier()).isFalse();
+
+    original.setPrivateIdentifier();
+    restored.deserializeProperties(original.serializeProperties(), false);
+
+    assertThat(restored.isPrivateIdentifier()).isTrue();
+  }
+
+  @Test
   public void testSerializeProperties_typeBeforeCast() {
     TestErrorReporter testErrorReporter = new TestErrorReporter();
     JSTypeRegistry registry = new JSTypeRegistry(testErrorReporter);

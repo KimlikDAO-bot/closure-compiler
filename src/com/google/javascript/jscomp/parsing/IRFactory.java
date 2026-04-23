@@ -2155,7 +2155,11 @@ class IRFactory {
 
     // class fields: general case
     Node processField(FieldDeclarationTree tree) {
-      maybeWarnForFeature(tree, Feature.PUBLIC_CLASS_FIELDS);
+      if (tree.name.isPrivateIdentifier()) {
+        maybeWarnForFeature(tree, Feature.PRIVATE_CLASS_PROPERTIES);
+      } else {
+        maybeWarnForFeature(tree, Feature.PUBLIC_CLASS_FIELDS);
+      }
 
       Node node =
           maybeAddNonJsDocComment(

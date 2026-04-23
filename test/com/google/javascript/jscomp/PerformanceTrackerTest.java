@@ -175,6 +175,7 @@ public final class PerformanceTrackerTest {
             JS sources: [0-9]+
             Extern lines:   [0-9]+
             Extern sources: [0-9]+
+            Dependency pruning analysis: not executed
 
             Summary:
             pass,runtime,allocMem,runs,changingRuns,astReduction,reduction,gzReduction

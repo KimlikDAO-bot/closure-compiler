@@ -50,6 +50,7 @@ import com.google.javascript.jscomp.CompilerOptions.InstrumentOption;
 import com.google.javascript.jscomp.CompilerOptions.SegmentOfCompilationToRun;
 import com.google.javascript.jscomp.ExpressionDecomposer.Workaround;
 import com.google.javascript.jscomp.JSChunkGraph.ChunkDependenceException;
+import com.google.javascript.jscomp.JSChunkGraph.DependencyManagementResult;
 import com.google.javascript.jscomp.JSChunkGraph.MissingChunkException;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.SortingErrorManager.ErrorReportGenerator;
@@ -2277,8 +2278,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     boolean staleInputs = false;
     if (options.getDependencyOptions().needsManagement()) {
       try {
-        chunkGraph.manageDependencies(this, options.getDependencyOptions());
+        DependencyManagementResult result =
+            chunkGraph.manageDependencies(this, options.getDependencyOptions());
         staleInputs = true;
+        maybeLogPruningAnalysis(result);
       } catch (MissingProvideException e) {
         report(JSError.make(MISSING_ENTRY_ERROR, e.getMessage()));
       } catch (MissingChunkException e) {
@@ -4528,5 +4531,18 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
     checkState(!script.getFirstChild().isModuleBody(), msg, args);
     return script;
+  }
+
+  private void maybeLogPruningAnalysis(DependencyManagementResult result) {
+    if (tracker == null || !options.getTracerMode().doPruningAnalysis()) {
+      return;
+    }
+    PruningAnalysis analysis = PruningAnalysis.create(result.sorter(), result.entryPointInputs());
+    PruningAnalysis.Result pruningResult = analysis.analyze();
+    tracker.setPruningAnalysisSummary(
+        "\nTransitive dependency count per entry point:\n"
+            + pruningResult.entryPointDependencyCount()
+            + "\n\nTop bottleneck dependencies:\n"
+            + pruningResult.bottleneckBlame());
   }
 }

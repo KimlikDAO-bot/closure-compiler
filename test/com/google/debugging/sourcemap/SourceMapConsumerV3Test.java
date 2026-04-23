@@ -100,6 +100,26 @@ public final class SourceMapConsumerV3Test {
   }
 
   @Test
+  public void testSectionsFormat_ignoresEmptySources() throws Exception {
+    consumer.parse(
+        GSON.toJson(
+            TestJsonBuilder.create()
+                .setVersion(3)
+                .setFile("testcode")
+                .setSources()
+                .addSection(
+                    1,
+                    2,
+                    TestJsonBuilder.create()
+                        .setVersion(3)
+                        .setFile("part_a")
+                        .setMappings("AAAAA,QAASA,UAAS,EAAG;")
+                        .setSources("testcode.js")
+                        .setNames("foo"))
+                .build()));
+  }
+
+  @Test
   public void testSourcesWithRoot() throws Exception {
     consumer.parse(
         GSON.toJson(

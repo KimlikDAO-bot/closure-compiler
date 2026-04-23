@@ -131,7 +131,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer, SourceMappi
     try {
       if (sourceMapObject.getLineCount() >= 0
           || sourceMapObject.getMappings() != null
-          || sourceMapObject.getSources() != null
+          || (sourceMapObject.getSources() != null && sourceMapObject.getSources().length > 0)
           || sourceMapObject.getNames() != null) {
         throw new SourceMapParseException("Invalid map format");
       }

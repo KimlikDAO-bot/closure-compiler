@@ -418,6 +418,41 @@ public final class InlineVariablesTest extends CompilerTestCase {
   }
 
   @Test
+  public void testConstInLoopAssignedOnceInLifetime() {
+    test(
+        """
+        for (; z; ) {
+          const x = 1;
+          use(x);
+        }
+        """,
+        """
+        for (; z; ) {
+          use(1);
+        }
+        """);
+
+    test(
+        """
+        function foo(arg) {
+          for (; z; ) {
+            const alias = arg;
+            use(alias);
+            use2(alias);
+          }
+        }
+        """,
+        """
+        function foo(arg) {
+          for (; z; ) {
+            use(arg);
+            use2(arg);
+          }
+        }
+        """);
+  }
+
+  @Test
   public void testInlineSubscopeAlias() {
     test(
         """

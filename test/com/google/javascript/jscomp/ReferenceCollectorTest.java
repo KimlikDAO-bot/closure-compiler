@@ -255,6 +255,20 @@ public final class ReferenceCollectorTest extends CompilerTestCase {
           }
         };
     testBehavior("while (true) { var x = 0; }", behavior);
+  }
+
+  @Test
+  public void testLetInLoopAssignedOnceInLifetime() {
+    Behavior behavior =
+        (t, rm) -> {
+          if (t.getScope().isBlockScope()) {
+            Var xVar = t.getScope().getVar("x");
+            assertThat(xVar).isNotNull();
+            assertThat(xVar.isLet()).isTrue();
+            ReferenceCollection x = rm.getReferences(xVar);
+            assertThat(x.isAssignedOnceInLifetime()).isTrue();
+          }
+        };
     testBehavior("while (true) { let x = 0; }", behavior);
   }
 

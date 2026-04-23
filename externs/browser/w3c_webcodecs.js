@@ -204,6 +204,9 @@ VideoFrame.prototype.codedRect;
 /** @const {?DOMRectReadOnly} */
 VideoFrame.prototype.visibleRect;
 
+/** @const {boolean} */
+VideoFrame.prototype.flip;
+
 /** @const {number} */
 VideoFrame.prototype.displayWidth;
 

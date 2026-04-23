@@ -255,7 +255,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
                 + "--chunk flags occur in relation to --js flags is unimportant. "
                 + "<num-js-files> may be set to 'auto' for the first chunk if it "
                 + "has no dependencies. "
-                + "Provide the value 'auto' to trigger chunk creation from CommonJS"
+                + "Provide the value 'auto' to trigger chunk creation from CommonJS "
                 + "modules.")
     private List<String> chunk = new ArrayList<>();
 
@@ -886,10 +886,10 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
     @Option(
         name = "--production_instrumentation_array_name",
         usage =
-            "Name of the global array used by production instrumentation. The array name "
-                + "should be declared as an extern so it is not renamed by the compiler. A function"
-                + "that parses the global array should also be included. This flag is to be used in"
-                + "tandem with --instrument_code=PRODUCTION")
+            "Name of the global array used by production instrumentation. The array name should be"
+                + " declared as an extern so it is not renamed by the compiler. A function that"
+                + " parses the global array should also be included. This flag is to be used in"
+                + " tandem with --instrument_code=PRODUCTION")
     private String productionInstrumentationArrayName = "";
 
     @Option(
@@ -1853,7 +1853,6 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
               + LanguageMode.validCommandLineNames());
     }
 
-
     options.setCodingConvention(new ClosureCodingConvention());
 
     options.setExtraAnnotationNames(flags.extraAnnotationName);
@@ -1886,6 +1885,7 @@ public class CommandLineRunner extends AbstractCommandLineRunner<Compiler, Compi
         || flags.isolationMode == IsolationMode.IIFE
         || flags.chunkOutputType == ChunkOutputType.ES_MODULES) {
       level.setWrappedOutputOptimizations(options);
+      options.setAssumeGlobalScopeIsIsolated(true);
     }
 
     if (flags.typedAstOutputFile != null) {

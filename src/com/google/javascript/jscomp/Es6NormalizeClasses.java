@@ -97,6 +97,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
   private final ExpressionDecomposer expressionDecomposer;
   private final SynthesizeExplicitConstructors ctorCreator;
   private final boolean transpileClassFields;
+  private final boolean transpilePrivateClassFields;
 
   private final boolean doStaticInheritanceRewrites;
   private final boolean doStaticSuperRewrites;
@@ -109,6 +110,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     // Note: This covers both public fields as well as static fields (they launched together).
     var options = compiler.getOptions();
     transpileClassFields = options.needsTranspilationOf(Feature.PUBLIC_CLASS_FIELDS);
+    transpilePrivateClassFields = options.needsTranspilationOf(Feature.PRIVATE_CLASS_PROPERTIES);
 
     doStaticInheritanceRewrites =
         options.getAssumeStaticInheritanceIsNotUsed() && !options.getSkipNonTranspilationPasses();
@@ -402,6 +404,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
+    maybeReportPrivatePropertiesCannotConvertYet(n);
     switch (n.getToken()) {
       case CLASS -> {
         ClassRecord currClassRecord = classStack.removeFirst();
@@ -538,7 +541,9 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
               ? convNonCompFieldToGetProp(thisNode, instanceMember, /* isStatic= */ false)
               : convCompFieldToGetElem(thisNode, instanceMember, /* isStatic= */ false);
 
-      transpiledNode.insertBefore(checkNotNull(insertionPoint));
+      if (transpiledNode != null) {
+        transpiledNode.insertBefore(insertionPoint);
+      }
     }
 
     insertionPoint.detach();
@@ -604,11 +609,22 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
   }
 
   /**
+   * Reports that transpilation of private class properties is not yet supported when attempting to
+   * rewrite or normalize private identifiers. See b/236744850.
+   */
+  private void maybeReportPrivatePropertiesCannotConvertYet(Node n) {
+    if (transpilePrivateClassFields && n.isPrivateIdentifier()) {
+      TranspilationUtil.cannotConvertYet(compiler, n, "Private class properties");
+    }
+  }
+
+  /**
    * Creates a node that represents receiver.key = value; where the key and value comes from the
    * non-computed field
    */
   private @Nullable Node convNonCompFieldToGetProp(
       Node receiver, Node noncomputedField, boolean isStatic) {
+    maybeReportPrivatePropertiesCannotConvertYet(noncomputedField);
     checkArgument(noncomputedField.isMemberFieldDef());
     checkArgument(receiver.getParent() == null, receiver);
 
@@ -661,8 +677,9 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
    */
   private @Nullable Node createFieldAssignment(
       Node field, @Nullable Node fieldValue, Supplier<Node> createAssignLhs) {
-    if (transpileClassFields) {
-      // We don't need to keep around the field declaration.
+    // For public fields, we don't need to keep around the field declaration.
+    // For private fields, we still need to keep them in the class body due to syntax requirements.
+    if (transpileClassFields && !field.isPrivateIdentifier()) {
       field.detach();
     }
 
@@ -678,6 +695,8 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
       fieldValue = astFactory.createUndefinedValue();
     } else {
       // We are going to move fieldValue to a new parent, so detach it now.
+      // (TODO: b/236744850): for private fields, consider keeping the initializers in the class
+      // body.
       fieldValue.detach();
     }
 
@@ -705,6 +724,7 @@ public final class Es6NormalizeClasses implements NodeTraversal.ScopedCallback, 
     Node staticInitTempParent = IR.block();
     while (!staticMembers.isEmpty()) {
       Node staticMember = staticMembers.remove();
+      maybeReportPrivatePropertiesCannotConvertYet(staticMember);
       // if the name is a property access, we want the whole chain of accesses, while for other
       // cases we only want the name node
       Node nameToUse = record.createNewNameReferenceNode().srcrefTree(staticMember);

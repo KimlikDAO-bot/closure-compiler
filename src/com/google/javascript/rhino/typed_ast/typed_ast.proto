@@ -413,4 +413,7 @@ enum NodeProperty {
   // TypedAST, the singular child AstNode is the shadowed code, not a normal
   // child node.
   CLOSURE_UNAWARE_SHADOW = 50;
+
+  // Indicates that a string node is a private identifier (e.g. `class { #x }`).
+  PRIVATE_IDENTIFIER = 51;
 }
