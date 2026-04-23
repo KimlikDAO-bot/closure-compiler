@@ -234,6 +234,50 @@ public class TemplatizedTypeTest extends BaseJSTypeTestCase {
     }
   }
 
+  @Test
+  public void testGreatestSubtypeWithSubclass() {
+    try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
+      TemplateType templateT = registry.createTemplateType("T");
+
+      FunctionType baseCtor = registry.createConstructorType(
+          "Base", null, null, null, ImmutableList.of(templateT), false);
+      ObjectType baseRaw = baseCtor.getInstanceType();
+
+      FunctionType subCtor = registry.createConstructorType(
+          "Sub", null, null, null, ImmutableList.of(templateT), false);
+      subCtor.setPrototypeBasedOn(baseRaw);
+      ObjectType subRaw = subCtor.getInstanceType();
+
+      JSType baseNumber = registry.createTemplatizedType(baseRaw, NUMBER_TYPE);
+      JSType subNumber = registry.createTemplatizedType(subRaw, NUMBER_TYPE);
+
+      assertType(baseNumber.getGreatestSubtype(subNumber)).isEqualTo(subNumber);
+      assertType(subNumber.getGreatestSubtype(baseNumber)).isEqualTo(subNumber);
+    }
+  }
+
+  @Test
+  public void testGreatestSubtypeWithIncompatibleGenerics() {
+    try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {
+      TemplateType templateT = registry.createTemplateType("T");
+
+      FunctionType baseCtor = registry.createConstructorType(
+          "Base", null, null, null, ImmutableList.of(templateT), false);
+      ObjectType baseRaw = baseCtor.getInstanceType();
+
+      FunctionType subCtor = registry.createConstructorType(
+          "Sub", null, null, null, ImmutableList.of(templateT), false);
+      subCtor.setPrototypeBasedOn(baseRaw);
+      ObjectType subRaw = subCtor.getInstanceType();
+
+      JSType baseNumber = registry.createTemplatizedType(baseRaw, NUMBER_TYPE);
+      JSType subString = registry.createTemplatizedType(subRaw, STRING_TYPE);
+
+      assertType(baseNumber.getGreatestSubtype(subString)).isEqualTo(NO_OBJECT_TYPE);
+      assertType(subString.getGreatestSubtype(baseNumber)).isEqualTo(NO_OBJECT_TYPE);
+    }
+  }
+
   /** Returns an unspecialized type with the provided name and two type parameters. */
   private ObjectType createCustomTemplatizedType(String rawName) {
     try (JSTypeResolver.Closer closer = this.registry.getResolver().openForDefinition()) {

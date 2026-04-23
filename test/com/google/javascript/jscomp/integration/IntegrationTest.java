@@ -174,11 +174,11 @@ public final class IntegrationTest extends IntegrationTestCase {
         function f(param) {
           if (true) {
             param = [];
-            for (const [key, value] of []) {}
+            for (let [key, value] of []) {}
           }
           if (true) {
             param = [];
-            for (const kv of []) {
+            for (let kv of []) {
               param = kv.key;
             }
           }
@@ -212,11 +212,11 @@ public final class IntegrationTest extends IntegrationTestCase {
         function f(b1_b2_key2_param) {
           if (true) {
             b1_b2_key2_param = [];
-            for (const [key, value] of []) {}
+            for (let [key, value] of []) {}
           }
           if (true) {
             b1_b2_key2_param = [];
-            for (const kv of []) {
+            for (let kv of []) {
               b1_b2_key2_param = kv.key;
             }
           }
@@ -246,7 +246,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         """
         function f(obj) {
           {
-            const {foo} = obj;
+            let {foo} = obj;
             alert(foo);
           }
           {
@@ -2495,7 +2495,7 @@ public final class IntegrationTest extends IntegrationTestCase {
           // Note: Foo.y stayed in the chunk where it had side effects.
           """
           function $getRandom$$() {
-            const $v$$ = Math.random();
+            var $v$$ = Math.random();
             alert("Picked " + $v$$);
             return $v$$;
           }
@@ -2610,7 +2610,7 @@ public final class IntegrationTest extends IntegrationTestCase {
           "",
           """
           function $getRandom$$() {
-            const $v$$ = Math.random();
+            var $v$$ = Math.random();
             alert("Picked " + $v$$);
             return $v$$;
           }
@@ -3340,7 +3340,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         }
         class Baz extends Foo {
           bar() {
-            const $jscomp$async$this$98447280$3 = this, $jscomp$async$super$get$98447280$5$bar =
+            var $jscomp$async$this$98447280$3 = this, $jscomp$async$super$get$98447280$5$bar =
                 () => super.bar;
             return (0, $jscomp.asyncExecutePromiseGeneratorFunction)(function*() {
               yield Promise.resolve();
@@ -3395,7 +3395,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         }
         class Baz extends Foo {
           bar() {
-            const $jscomp$asyncIter$this$98447280$1 = this,
+            var $jscomp$asyncIter$this$98447280$1 = this,
                   $jscomp$asyncIter$super$get$bar =
                       () => super.bar;
             return new $jscomp.AsyncGeneratorWrapper(function*() {
@@ -4987,7 +4987,7 @@ async function abc() {
             + """
             async function* foo() {yield 1; await 0; yield 2}
             async function bar() {
-              for await (const val of foo())
+              for await (let val of foo())
                 console.log(val)
             }
             bar()
@@ -5177,7 +5177,7 @@ async function abc() {
         """
         window.a = class {
           constructor() {
-            let b = new.target;
+            var b = new.target;
             return Object.create(b.prototype);
           }
         };
@@ -5314,8 +5314,8 @@ async function abc() {
         "class C { async f(p) { let obj = await p; return obj?.prop; } }",
         """
         let C=function(){};
-        C.prototype.f=async function(p){let obj=await p;
-          let $jscomp$optchain$tmp98447280$0;
+        C.prototype.f=async function(p){var obj=await p;
+          var $jscomp$optchain$tmp98447280$0;
           return($jscomp$optchain$tmp98447280$0=obj)==null?void 0:$jscomp$optchain$tmp98447280$0.prop}
         """);
   }

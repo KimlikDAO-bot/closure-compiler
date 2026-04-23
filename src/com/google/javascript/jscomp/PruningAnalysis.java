@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static java.util.Comparator.comparingInt;
 
 import com.google.common.collect.ImmutableList;
@@ -119,7 +120,7 @@ final class PruningAnalysis {
     return bottleneckBlame.entrySet().stream()
         .sorted(comparingInt((Map.Entry<String, Integer> entry) -> entry.getValue()).reversed())
         .limit(BOTTLENECK_THRESHOLD)
-        .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
+        .collect(toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 
   private DiGraph<String, String> buildGraph() {

@@ -484,7 +484,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
       if ($$jscomp$forAwait$tempResult0$$.done) {
         break;
       }
-      const [$key$$, $value$jscomp$2$$] = $$jscomp$forAwait$tempResult0$$.value;
+      let [$key$$, $value$jscomp$2$$] = $$jscomp$forAwait$tempResult0$$.value;
       console.log($key$$, $value$jscomp$2$$);
 }
   } catch ($$jscomp$forAwait$catchErrParam0$$) {
@@ -898,7 +898,7 @@ public final class AdvancedOptimizationsIntegrationTest extends IntegrationTestC
         class C {
           constructor(        ) {
             this.elements =       [];
-            for (const element of this.elements) {
+            for (let element of this.elements) {
               element.someProp = 1;
             }
           }

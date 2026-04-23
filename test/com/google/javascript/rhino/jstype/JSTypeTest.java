@@ -5374,7 +5374,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
 
     assertTypeEquals(
         JSType.getGreatestSubtype(objectOfString, arrayOfString),
-        NO_OBJECT_TYPE);
+        arrayOfString);
 
     assertTypeEquals(
         JSType.getGreatestSubtype(OBJECT_TYPE, arrayOfString),

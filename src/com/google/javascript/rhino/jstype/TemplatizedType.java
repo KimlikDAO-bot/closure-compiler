@@ -174,12 +174,10 @@ public final class TemplatizedType extends ProxyObjectType {
     checkNotNull(rawThat);
 
     if (!wrapsSameRawType(rawThat)) {
-      if (!rawThat.isTemplatizedType()) {
-        if (this.isSubtype(rawThat)) {
-          return this;
-        } else if (rawThat.isSubtypeOf(this)) {
-          return rawThat;
-        }
+      if (this.isSubtype(rawThat)) {
+        return this;
+      } else if (rawThat.isSubtypeOf(this)) {
+        return rawThat;
       }
       if (this.isObject() && rawThat.isObject()) {
         return this.getNativeType(JSTypeNative.NO_OBJECT_TYPE);

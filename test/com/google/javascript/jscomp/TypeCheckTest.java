@@ -6149,6 +6149,26 @@ public final class TypeCheckTest extends TypeCheckTestCase {
   }
 
   @Test
+  public void testComparisonWithTemplatizedSubclass() {
+    newTest()
+        .addSource(
+            """
+            /** @template T @constructor */
+            function Base() {}
+            /**
+             * @template T
+             * @constructor
+             * @extends {Base<T>}
+             */
+            function Sub() {}
+            /** @type {!Base<number>} */ var base = new Base();
+            /** @type {!Sub<number>} */ var sub = new Sub();
+            if (base === sub) {}
+            """)
+        .run();
+  }
+
+  @Test
   public void testDeleteOperator1() {
     newTest()
         .addSource(
