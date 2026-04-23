@@ -1459,7 +1459,7 @@ public class CompilerOptions {
     // Optimizations
     foldConstants = false;
     coalesceVariableNames = false;
-    optimizeLetAndConst = true;
+    optimizeLetAndConst = false;
     assumeGlobalScopeIsIsolated = false;
     deadAssignmentElimination = false;
     deadPropertyAssignmentElimination = Tri.UNKNOWN;

@@ -177,7 +177,7 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
         expected(
             expectedClosureUnaware(
                 """
-                var a = {x: 1, y: 2};
+                const a = {x: 1, y: 2};
                 foo(a);
                 return a.x;
                 """)));
@@ -200,7 +200,7 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
             expectedClosureUnaware(
                 """
                 return function(a) {
-                  var b = a.x;
+                  const b = a.x;
                   a.y;
                   console.log(b);
                 }
@@ -222,7 +222,7 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
         expectedClosureUnaware(
             """
             return function(a) {
-              var b = a.x;
+              const b = a.x;
               a.y = 0;
               console.log(b);
             }
@@ -255,7 +255,7 @@ public class TranspileAndOptimizeClosureUnawareTest extends CompilerTestCase {
             """
             return function() {
               globalThis.foo = function() {
-              var a = typeof External === "undefined" ? null : External;
+              const a = typeof External === "undefined" ? null : External;
               console.log(a);
               };
             };
