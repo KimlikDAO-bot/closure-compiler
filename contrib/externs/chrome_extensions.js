@@ -2897,6 +2897,26 @@ chrome.enterprise.reportingPrivate.AntiVirusProductState = {
 chrome.enterprise.reportingPrivate.AntiVirusSignal;
 
 /**
+ * Gets information about hotfix system updates installed on the current device.
+ * @param {!chrome.enterprise.reportingPrivate.UserContext} userContext The
+ *     current user context.
+ * @param {(function(Array<!chrome.enterprise.reportingPrivate.HotfixSignal>):
+ *     void)}
+ *     callback Called back with the response.
+ */
+chrome.enterprise.reportingPrivate.getHotfixes = function(
+  userContext, callback
+) {};
+
+/**
+ * Type of the object returned by getHotfixes.
+ * @typedef {?{
+ *   hotfixId: string,
+ * }}
+ */
+chrome.enterprise.reportingPrivate.HotfixSignal;
+
+/**
  * @enum {string}
  * @see https://developer.chrome.com/docs/extensions/reference/api/types#type-LevelOfControl
  */

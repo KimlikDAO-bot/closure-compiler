@@ -16,16 +16,16 @@ name: Release Project
 permissions:
   contents: read
 
-# This workflow is triggered by pushes to the `master` branch.
-# It first checks if `.github/piper-cut-cl.json` has been modified in the latest push.
-# If changes are detected, indicating a new release cut, the workflow proceeds to:
+# This workflow is triggered by pushes to the `master` branch that modify '.github/piper-cut-cl.json'.
+# When `piper-cut-cl.json` changes, indicating a new release cut, the workflow proceeds to:
 # 1.  Tag the repository at the current commit with the new version ID.
 # 2.  Run the test suite.
 # 3.  If tests pass, publish the release artifacts to Sonatype.
 on:
   push:
-    # TODO(dramaix): Trigger this workflow only when .github/piper-cut-cl.json is modified.
     branches: [ master ]
+    paths:
+      - '.github/piper-cut-cl.json'
 
 jobs:
   tag_release_version_id:
@@ -34,26 +34,18 @@ jobs:
     permissions:
       contents: write
     outputs:
-      foundNewRelease: ${{ steps.detect_changes.outputs.foundNewRelease }}
       tag: ${{ fromJson(steps.set_piper_json_vars.outputs.piperJson).version_id }}
     steps:
-    # Checkout the piper-cut-cl.json from the most recent two commits
+    # Checkout the piper-cut-cl.json from the most recent commit
     - name: Checkout Current closure-compiler Commit
       # https://github.com/marketplace/actions/checkout
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
-        fetch-depth: 2
+        fetch-depth: 1
         sparse-checkout: |
           .github/piper-cut-cl.json
           .github/ci_support/tag_release_version.sh
         sparse-checkout-cone-mode: false
-
-    - id: detect_changes
-      run: |
-        PIPER_DIFF=$(git diff HEAD~1 -- .github/piper-cut-cl.json)
-        FOUND_NEW_RELEASE=$([ -n "$PIPER_DIFF" ] && echo "true" || echo "false")
-        echo "foundNewRelease=$FOUND_NEW_RELEASE" >> "$GITHUB_OUTPUT"
-        echo "foundNewRelease: $FOUND_NEW_RELEASE"
 
     - id: set_piper_json_vars
       # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs#steps-context
@@ -64,12 +56,9 @@ jobs:
             echo EOF
         } >> "$GITHUB_OUTPUT"
 
-    # Check out all historical commits
-    # This is much more expensive than just checking out the most recent
-    # 2 commits, as done above, so only do this if actually cutting a release
+    # Fetch all historical commits
     - name: Checkout all closure-compiler commits and tags
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      if: ${{ steps.detect_changes.outputs.foundNewRelease == 'true' }}
       with:
         # a depth of 0 triggers a fetch of all historical commits/branches/tags
         # https://github.com/marketplace/actions/checkout#Fetch-all-history-for-all-tags-and-branches
@@ -77,7 +66,6 @@ jobs:
 
     - name: Tag cut CL
       id: tag_cut_cl
-      if: ${{ steps.detect_changes.outputs.foundNewRelease == 'true' }}
       run: |
           git config --global user.name "${GITHUB_ACTOR}"
           git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
@@ -91,8 +79,6 @@ jobs:
   run-tests:
     uses: ./.github/workflows/run_tests.yaml
     needs: tag_release_version_id
-    # Only run tests if a new release is being cut.
-    if: ${{ needs.tag_release_version_id.outputs.foundNewRelease == 'true' }}
     with:
       ref: ${{ needs.tag_release_version_id.outputs.tag }}
 
@@ -137,8 +123,15 @@ jobs:
           server-password: SONATYPE_PASSWORD_TOKEN
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
 
-      - name: Setup Bazel
-        uses: bazelbuild/setup-bazelisk@v3
+      # https://github.com/bazel-contrib/setup-bazel
+      - uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # v0.19.0
+        with:
+          # Avoid downloading Bazel every time.
+          bazelisk-cache: true
+          # Store build cache per workflow.
+          disk-cache: ${{ github.workflow }}
+          # Share repository cache between workflows
+          repository-cache: true
 
       - name: Upload and Publish to Sonatype
         run: |
