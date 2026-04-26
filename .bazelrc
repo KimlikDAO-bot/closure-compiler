@@ -14,10 +14,13 @@ build --define=COMPILER_VERSION=1.0-SNAPSHOT
 # Setting for running in remote CI
 build --color=yes
 
-# Enable Java 21
-build --java_runtime_version=21
-build --java_language_version=21
-build --tool_java_language_version=21
-build --tool_java_runtime_version=21
+# Required by rules_java >= 8.16 on Bazel 8.0.x.
+common --repositories_without_autoloads=bazel_features_version,bazel_features_globals
+
+# Enable Java 25.
+build --java_runtime_version=25
+build --java_language_version=25
+build --tool_java_language_version=25
+build --tool_java_runtime_version=25
 
 test --test_output=errors

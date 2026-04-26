@@ -311,6 +311,9 @@ gen_java_tests(
         ]
     ),
     prefix_path = "test/",
+    # Mockito's inline mock maker currently reaches Byte Buddy code paths that
+    # require the experimental flag on Java 25.
+    jvm_flags = ["-Dnet.bytebuddy.experimental=true"],
     deps = [
         ":compiler_lib",
         ":compiler_tests_resources",
