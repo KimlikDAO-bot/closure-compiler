@@ -1,0 +1,40 @@
+name: kdts25 ci
+
+on:
+  push:
+    branches: [ kdts25 ]
+    paths-ignore:
+      - "**/*.md"
+  pull_request:
+    branches: [ kdts25 ]
+    paths-ignore:
+      - "**/*.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Java
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          distribution: temurin
+          java-version: '25'
+          java-package: jdk
+          architecture: x64
+
+      - name: Checkout Current closure-compiler Commit
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # v0.19.0
+        with:
+          bazelisk-cache: true
+          disk-cache: ${{ github.workflow }}
+          repository-cache: true
+
+      - name: Build and Test
+        run: unset ANDROID_HOME && bazelisk test //:all
