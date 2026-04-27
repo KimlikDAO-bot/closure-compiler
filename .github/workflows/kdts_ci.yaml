@@ -2,11 +2,11 @@ name: KDTS CI
 
 on:
   push:
-    branches: [ kdts ]
+    branches: [ kdts, kdts25 ]
     paths-ignore:
       - "**/*.md"
   pull_request:
-    branches: [ kdts ]
+    branches: [ kdts, kdts25 ]
     paths-ignore:
       - "**/*.md"
   workflow_dispatch:
