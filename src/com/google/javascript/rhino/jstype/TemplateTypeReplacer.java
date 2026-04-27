@@ -425,6 +425,15 @@ public final class TemplateTypeReplacer implements Visitor<JSType> {
   }
 
   private JSType caseProxyObjectTypeUnguarded(ProxyObjectType type) {
+    if (type instanceof AwaitedType awaitedType) {
+      JSType beforeAwaitedType = awaitedType.getAwaitedTypeArgument();
+      JSType replacement = beforeAwaitedType.visit(this);
+      if (!identical(replacement, beforeAwaitedType)) {
+        return registry.createAwaitedType(replacement);
+      }
+      return type;
+    }
+
     // Be careful not to unwrap a type unless it has changed.
     JSType beforeType = type.getReferencedTypeInternal();
     JSType replacement = beforeType.visit(this);

@@ -401,6 +401,46 @@ public final class JSTypeRegistry {
     return checkNotNull(iThenableTemplateKey);
   }
 
+  /**
+   * Resolves the type of {@code Awaited<T>} using the same unwrapping rules as the JS {@code
+   * await} operator.
+   */
+  public JSType getAwaitedType(JSType type) {
+    if (type.isUnknownType()) {
+      return type;
+    }
+
+    if (type.isUnionType()) {
+      UnionType.Builder unionTypeBuilder = UnionType.builder(this);
+      for (JSType alternate : type.toMaybeUnionType().getAlternates()) {
+        unionTypeBuilder.addAlternate(getAwaitedType(alternate));
+      }
+      return unionTypeBuilder.build();
+    }
+
+    TemplateTypeMap templates = type.getTemplateTypeMap();
+    if (templates.hasTemplateKey(getIThenableTemplate())) {
+      return getAwaitedType(templates.getResolvedTemplateType(getIThenableTemplate()));
+    }
+
+    if (type.isSubtypeOf(getNativeType(JSTypeNative.THENABLE_TYPE))) {
+      return getNativeType(JSTypeNative.UNKNOWN_TYPE);
+    }
+
+    return type;
+  }
+
+  /** Creates a deferred representation of {@code Awaited<T>} when template substitution is needed. */
+  public JSType createAwaitedType(JSType type) {
+    if (type instanceof AwaitedType) {
+      return type;
+    }
+    if (!type.hasAnyTemplateTypes()) {
+      return getAwaitedType(type);
+    }
+    return new AwaitedType(this, type);
+  }
+
   /** Returns an immutable list of template types of the given builtin. */
   public @Nullable ImmutableList<TemplateType> maybeGetTemplateTypesOfBuiltin(
       StaticScope scope, String fnName) {
@@ -2189,6 +2229,11 @@ public final class JSTypeRegistry {
         return type;
       }
       case STRINGLIT -> {
+        if (n.getString().equals("Awaited")) {
+          return addNullabilityBasedOnParseContext(
+              n, createAwaitedTypeFromCommentNode(n, sourceName, scope), scope);
+        }
+
         JSType nominalType =
             getType(scope, n.getString(), sourceName, n.getLineno(), n.getCharno());
         ImmutableList<JSType> templateArgs = parseTemplateArgs(nominalType, n, sourceName, scope);
@@ -2301,12 +2346,40 @@ public final class JSTypeRegistry {
       // Template types represent the substituted type exactly and should
       // not be wrapped.
       return type;
+    } else if (type instanceof AwaitedType awaitedType
+        && awaitedType.getReferencedTypeInternal().isTemplateType()) {
+      // Deferred Awaited<T> should preserve the same nullability behavior as a bare T.
+      return type;
     } else if (n.hasParent() && n.getParent().getToken() == Token.BANG) {
       // Names parsed from beneath a BANG never need nullability added.
       return type;
     } else {
       return createNullableType(type);
     }
+  }
+
+  private JSType createAwaitedTypeFromCommentNode(
+      Node typeNode, String sourceName, StaticTypedScope scope) {
+    Node typeList = typeNode.getFirstChild();
+    if (typeList == null || !typeList.hasChildren()) {
+      return getNativeType(UNKNOWN_TYPE);
+    }
+
+    Node awaitedTypeNode = typeList.getFirstChild();
+    if (awaitedTypeNode.getNext() != null) {
+      Node firstExtraTemplateParam = awaitedTypeNode.getNext();
+      String message =
+          "Too many template parameters\nFound "
+              + typeList.getChildCount()
+              + ", required at most 1";
+      reporter.warning(
+          message,
+          sourceName,
+          firstExtraTemplateParam.getLineno(),
+          firstExtraTemplateParam.getCharno());
+    }
+
+    return createAwaitedType(createTypeFromCommentNode(awaitedTypeNode, sourceName, scope));
   }
 
   private @Nullable ImmutableList<JSType> parseTemplateArgs(

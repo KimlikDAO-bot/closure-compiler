@@ -546,6 +546,11 @@ public abstract class JSType {
     return null;
   }
 
+  /** Returns the operand of an {@code Awaited<T>} type, or {@code null} if this is not awaited. */
+  public @Nullable JSType getAwaitedTypeArgument() {
+    return null;
+  }
+
   public boolean hasAnyTemplateTypes() {
     // If the result has been cached use that.
     if (this.templateCheckResult != null) {

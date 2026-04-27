@@ -104,6 +104,11 @@ final class ContainsUpperBoundSuperTypeVisitor extends Visitor.WithDefaultCase<R
     return Result.ABSENT;
   }
 
+  @Override
+  public Result caseProxyObjectType(ProxyObjectType type) {
+    return caseForwardingType(type, type.getReferencedTypeInternal());
+  }
+
   private Result caseForwardingType(JSType type, JSType reference) {
     if (identical(type, target)) {
       return Result.PRESENT;

@@ -24,8 +24,6 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.TemplateType;
-import com.google.javascript.rhino.jstype.TemplateTypeMap;
-import com.google.javascript.rhino.jstype.UnionType;
 
 /**
  * Models different Javascript Promise-related operations
@@ -70,37 +68,7 @@ final class Promises {
    * <p>{@code ?Promise<number>} becomes {@code (null|number)}
    */
   static final JSType getResolvedType(JSTypeRegistry registry, JSType type) {
-    if (type.isUnknownType()) {
-      return type;
-    }
-
-    if (type.isUnionType()) {
-      UnionType.Builder unionTypeBuilder = UnionType.builder(registry);
-      for (JSType alternate : type.toMaybeUnionType().getAlternates()) {
-        unionTypeBuilder.addAlternate(getResolvedType(registry, alternate));
-      }
-      return unionTypeBuilder.build();
-    }
-
-    // If we can find the "IThenable" template key (which is true for Promise and IThenable), return
-    // the resolved value. e.g. for "!Promise<string>" return "string".
-    TemplateTypeMap templates = type.getTemplateTypeMap();
-    if (templates.hasTemplateKey(registry.getIThenableTemplate())) {
-      // Call getResolvedPromiseType again in case someone does something unusual like
-      // !Promise<!Promise<number>>
-      // TODO(lharker): we don't need to handle this case and should report an error for this in a
-      // type annotation (not here, maybe in TypeCheck). A Promise cannot resolve to another Promise
-      return getResolvedType(
-          registry, templates.getResolvedTemplateType(registry.getIThenableTemplate()));
-    }
-
-    // Awaiting anything with a ".then" property (other than IThenable, handled above) should return
-    // unknown, rather than the type itself.
-    if (type.isSubtypeOf(registry.getNativeType(JSTypeNative.THENABLE_TYPE))) {
-      return registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
-    }
-
-    return type;
+    return registry.getAwaitedType(type);
   }
 
   /**

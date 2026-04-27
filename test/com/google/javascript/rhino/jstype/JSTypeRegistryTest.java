@@ -53,13 +53,16 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.I_TEMPLATE_ARRAY_T
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_VOID;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.PROMISE_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.testing.TypeSubject.assertType;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
 import com.google.javascript.rhino.Token;
@@ -159,6 +162,49 @@ public class JSTypeRegistryTest {
     assertThat(paramType.toString())
         .isEqualTo(
             "function(function((IThenable<TYPE>|TYPE|null|{then: ?})=): ?, function(*=): ?): ?");
+  }
+
+  @Test
+  public void testEvaluateTypeExpressionInGlobalScope_resolvesAwaited() {
+    JSType type =
+        registry.evaluateTypeExpressionInGlobalScope(
+            new JSTypeExpression(
+                JsDocInfoParser.parseTypeString(
+                    "Awaited<!Promise<!Promise<number>>>|Awaited<!IThenable<string>>"),
+                "<test>"));
+
+    assertType(type)
+        .isEqualTo(
+            registry.createUnionType(
+                registry.getNativeType(NULL_TYPE),
+                registry.getNativeType(NUMBER_TYPE),
+                registry.getNativeType(STRING_TYPE)));
+  }
+
+  @Test
+  public void testEvaluateTypeExpression_preservesDeferredAwaitedOverTemplateType() {
+    TemplateType templateType = registry.createTemplateType("T");
+    StaticTypedScope scope =
+        registry.createScopeWithTemplates(new MapBasedScope(ImmutableMap.of()), ImmutableList.of(templateType));
+
+    JSType type =
+        registry.evaluateTypeExpression(
+            new JSTypeExpression(JsDocInfoParser.parseTypeString("Awaited<T>"), "<test>"), scope);
+
+    assertThat(type.toString()).isEqualTo("Awaited<T>");
+    assertThat(type.isTemplateType()).isFalse();
+
+    JSType replacement =
+        type.visit(
+            TemplateTypeReplacer.forInference(
+                registry,
+                ImmutableMap.of(
+                    templateType,
+                    registry.createTemplatizedType(
+                        registry.getNativeObjectType(PROMISE_TYPE),
+                        registry.getNativeType(NUMBER_TYPE)))));
+
+    assertType(replacement).isEqualTo(registry.getNativeType(NUMBER_TYPE));
   }
 
   @Test

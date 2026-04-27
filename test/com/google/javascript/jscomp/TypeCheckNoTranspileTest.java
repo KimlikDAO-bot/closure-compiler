@@ -6966,6 +6966,63 @@ override: function(number): undefined
   }
 
   @Test
+  public void testAwaitedTypeAnnotation() {
+    newTest()
+        .addSource(
+            """
+            function takesNumber(/** number */ num) {}
+
+            /** @param {!Awaited<!Promise<number>>} value */
+            function f(value) {
+              takesNumber(value);
+            }
+            """)
+        .run();
+  }
+
+  @Test
+  public void testAwaitedTypeAnnotationOnTemplatedCallbackParameter() {
+    newTest()
+        .addSource(
+            """
+            /**
+             * @template T
+             * @param {function(Awaited<T>): void} cb
+             * @param {T} value
+             */
+            function apply(cb, value) {}
+
+            /** @const {!Promise<number>} */
+            var value = /** @type {!Promise<number>} */ ({});
+
+            apply(
+              /** @param {number} n */ function(n) {},
+              value);
+            """)
+        .run();
+  }
+
+  @Test
+  public void testAwaitedTypeAnnotationInfersTemplateTypeAtCallSite() {
+    newTest()
+        .addSource(
+            """
+            /**
+             * @template T
+             * @param {!Awaited<T>} x
+             * @return {!Promise<T>}
+             */
+            async function f(x) {
+              return x;
+            }
+
+            /** @const {!Promise<bigint>} */
+            var y = f(1n);
+            """)
+        .run();
+  }
+
+  @Test
   public void testAwaitIThenable() {
     newTest()
         .addSource(

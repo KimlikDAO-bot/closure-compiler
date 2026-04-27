@@ -142,6 +142,14 @@ final class InvocationTemplateTypeMatcher {
       return;
     }
 
+    JSType awaitedOperand = paramType.getAwaitedTypeArgument();
+    if (awaitedOperand != null) {
+      // Prefer the canonical `T = arg` inference for Awaited<T> rather than trying to enumerate
+      // thenable preimages such as Promise<T> or Promise<Promise<T>>.
+      this.matchTemplateTypesRecursive(awaitedOperand, argType);
+      return;
+    }
+
     if (paramType.isFunctionType()) {
       FunctionType paramFunctionType = paramType.toMaybeFunctionType();
       FunctionType argFunctionType =
